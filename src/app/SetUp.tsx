@@ -6,6 +6,7 @@ import Stats from "three/addons/libs/stats.module.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import CannonUtils from "./Utils/cannonUtils";
+import * as dat from "dat.gui";
 
 const SetUp = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -123,6 +124,7 @@ const SetUp = () => {
     const rows = 15;
     const dist = clothSize / cols;
     const particles: CANNON.Body[][] = [];
+    const springs: CANNON.Spring[] = [];
 
     const constraintLines: THREE.Line[] = [];
 
@@ -174,7 +176,53 @@ const SetUp = () => {
         )
       );
       // createConstraintLine(particles[i1][j1], particles[i2][j2])
+      const spring = new CANNON.Spring(particles[i1][j1], particles[i2][j2], {
+        restLength: dist,
+        stiffness: 100,
+        damping: 1,
+      });
+      springs.push(spring);
     }
+
+    const gui = new dat.GUI();
+    const springParams = {
+      stiffness: 100,
+      damping: 1,
+      restLength: dist,
+    };
+
+    const initialPositions = particles.map(row => row.map(particle => particle.position.clone()));
+
+    const resetParticlePositions = () => {
+      for (let i = 0; i < cols + 1; i++) {
+        for (let j = 0; j < rows + 1; j++) {
+          particles[i][j].position.copy(initialPositions[i][j]);
+          particles[i][j].velocity.set(0, 0, 0);
+          particles[i][j].force.set(0, 0, 0);
+        }
+      }
+    };
+
+    gui.add(springParams, 'stiffness', 0, 200).onChange((value) => {
+      springs.forEach((spring) => {
+        spring.stiffness = value;
+      });
+      resetParticlePositions()
+    });
+  
+    gui.add(springParams, 'damping', 0, 10).onChange((value) => {
+      springs.forEach((spring) => {
+        spring.damping = value;
+      });
+      resetParticlePositions()
+    });
+  
+    gui.add(springParams, 'restLength', 0, 10).onChange((value) => {
+      springs.forEach((spring) => {
+        spring.restLength = value;
+      });
+      resetParticlePositions()
+    });
 
     for (let i = 0; i < cols + 1; i++) {
       for (let j = 0; j < rows + 1; j++) {
@@ -207,6 +255,12 @@ const SetUp = () => {
           positionAttribute.setXYZ(index, position.x, position.y, position.z);
           positionAttribute.needsUpdate = true;
         }
+      }
+    }
+
+    function updateSprings(): void {
+      for (const spring of springs) {
+        spring.applyForce();
       }
     }
 
@@ -246,7 +300,7 @@ const SetUp = () => {
       const convexGeo = new THREE.Mesh(normalMesh.geometry, clothMaterial);
       convexGeo.userData.selectable = false;
       convexGeo.castShadow = true;
-      convexGeo.receiveShadow = true; 
+      convexGeo.receiveShadow = true;
       monkey.add(convexGeo);
 
       convertConvexHullToTrimesh();
@@ -287,6 +341,7 @@ const SetUp = () => {
       requestAnimationFrame(animate);
       world.step(1 / 60);
       updateParticules();
+      updateSprings();
       // updateConstraintLines()
 
       stats.begin();
@@ -303,6 +358,7 @@ const SetUp = () => {
         currentRef.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      gui.destroy()
     };
   }, []);
   return (
