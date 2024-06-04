@@ -1,6 +1,9 @@
 "use client";
 import React from "react";
-import SetUp from "./SetUp";
+import dynamic from 'next/dynamic';
+
+const SetUp = dynamic(() => import('./SetUp'), { ssr: false });
+
 
 const Page = () => {
   return (
