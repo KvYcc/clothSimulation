@@ -13,6 +13,8 @@ const SetUp = () => {
   const statsDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const currentRef = ref.current;
     const currentStatsDiv = statsDiv.current;
     if (!currentRef) return;
