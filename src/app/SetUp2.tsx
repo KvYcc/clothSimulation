@@ -11,11 +11,10 @@ import * as dat from "dat.gui";
 const SetUp = () => {
   const ref = useRef<HTMLDivElement>(null);
   const statsDiv = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState(15)
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
+    
     const currentRef = ref.current;
     const currentStatsDiv = statsDiv.current;
     if (!currentRef) return;
@@ -122,36 +121,31 @@ const SetUp = () => {
     });
 
     //cloth parameter
-    const params ={size:size}
-    
-    const clothSize = 2;
-    let cols = params.size;
-    let rows = params.size;
-    let dist = clothSize / cols;
+    const clothSize = 1;
+    const cols = 15;
+    const rows = 15;
+    const dist = clothSize / cols;
     const particles: CANNON.Body[][] = [];
     const springs: CANNON.Spring[] = [];
 
     const constraintLines: THREE.Line[] = [];
-    
-    const createParticles = () =>{
-      for (let i = 0; i < cols + 1; i++) {
-        particles.push([]);
-        for (let j = 0; j < rows + 1; j++) {
-          const particle = new CANNON.Body({
-            mass: 0.1,
-            position: new CANNON.Vec3(
-              (i - cols * 0.5) * dist,
-              4,
-              (j - rows * 0.5) * dist
-            ),
-            shape: new CANNON.Sphere(0.15),
-          });
-          particles[i].push(particle);
-          world.addBody(particle);
-        }
+
+    for (let i = 0; i < cols + 1; i++) {
+      particles.push([]);
+      for (let j = 0; j < rows + 1; j++) {
+        const particle = new CANNON.Body({
+          mass: 0.1,
+          position: new CANNON.Vec3(
+            (i - cols * 0.5) * dist,
+            4,
+            (j - rows * 0.5) * dist
+          ),
+          shape: new CANNON.Sphere(0.08),
+        });
+        particles[i].push(particle);
+        world.addBody(particle);
       }
-    } 
-   
+    }
 
     // function createConstraintLine(p1: CANNON.Body, p2: CANNON.Body) {
     //   const geometry = new THREE.BufferGeometry();
@@ -191,24 +185,6 @@ const SetUp = () => {
       });
       springs.push(spring);
     }
-    const createCloth = () => {
-      for (let i = 0; i < cols + 1; i++) {
-        for (let j = 0; j < rows + 1; j++) {
-          if (i < cols) connectGround(i, j, i + 1, j);
-          if (j < rows) connectGround(i, j, i, j + 1);
-        }
-      }
-    };
-    const resetCloth = () => {
-      particles.forEach(row => row.forEach(particle => world.removeBody(particle)));
-      particles.length = 0;
-      springs.length = 0;
-      createParticles();
-      createCloth();
-    };
-
-    createParticles();
-    createCloth();
 
     const gui = new dat.GUI();
     const springParams = {
@@ -248,16 +224,6 @@ const SetUp = () => {
         spring.restLength = value;
       });
       resetParticlePositions()
-    });
-
-    gui.add(params, 'size', 15, 60, 15).onChange(value => {
-      cols = value;
-      rows = value;
-      dist = clothSize / cols;
-      resetCloth();
-      clothMesh.geometry.dispose();
-      clothMesh.geometry = new THREE.PlaneGeometry(clothSize, clothSize, cols, rows);
-      setSize(value)
     });
 
     for (let i = 0; i < cols + 1; i++) {
@@ -396,7 +362,7 @@ const SetUp = () => {
       renderer.dispose();
       gui.destroy()
     };
-  }, [size]);
+  }, []);
   return (
     <div ref={ref} className="w-full h-screen">
       <div ref={statsDiv} className="'stats"></div>
