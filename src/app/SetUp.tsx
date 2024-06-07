@@ -16,7 +16,7 @@ const SetUp = () => {
   const [springParams, setSpringParams] = useState({
     stiffness: 100,
     damping: 0.5,
-    restLength: 1.5 / size / 3
+    restLength: 1.5 / size / 2.5,
   });
   const [showSprings, setShowSprings] = useState(false);
   const [showConstraints, setShowConstraints] = useState(false);
@@ -31,12 +31,12 @@ const SetUp = () => {
     //setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      75,
+      45,
       window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+      0.001,
+      100
     );
-    camera.position.set(5, 15, 5);
+    camera.position.set(2, 5, 2);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer();
@@ -68,7 +68,7 @@ const SetUp = () => {
     }
     //Cannon.js
     const world = new CANNON.World();
-    world.gravity.set(0, -9.81, 0);
+    world.gravity.set(0, -1, 0);
 
     //ground mesh
     const massGround: number = 0;
@@ -140,9 +140,10 @@ const SetUp = () => {
     const springs: CANNON.Spring[] = [];
     const springLines: THREE.Line[] = [];
     const constraintLines: THREE.Line[] = [];
+    // const particleMeshes: THREE.Mesh[] = [];
 
     const createParticles = () => {
-      const particleRadius = clothSize / cols;
+      const particleRadius = clothSize / cols/2;
       for (let i = 0; i < cols + 1; i++) {
         particles.push([]);
         for (let j = 0; j < rows + 1; j++) {
@@ -157,6 +158,14 @@ const SetUp = () => {
           });
           particles[i].push(particle);
           world.addBody(particle);
+
+          // const particleMesh =new THREE.Mesh(
+          //   new THREE.SphereGeometry(particleRadius),
+          //   new THREE.MeshBasicMaterial({color: 0xff0000})
+          // )
+          // particleMesh.position.copy(particle.position)
+          // scene.add(particleMesh)
+          // particleMeshes.push(particleMesh)
         }
       }
     };
@@ -231,8 +240,8 @@ const SetUp = () => {
         for (let j = 0; j < rows + 1; j++) {
           if (i < cols) connectGround(i, j, i + 1, j);
           if (j < rows) connectGround(i, j, i, j + 1);
-          if (i < cols && j < rows) connectGround(i, j, i + 1, j + 1);
-          if (i > 0 && j < rows) connectGround(i, j, i - 1, j + 1);
+          // if (i < cols && j < rows) connectGround(i, j, i + 1, j + 1);
+          // if (i > 0 && j < rows) connectGround(i, j, i - 1, j + 1);
         }
       }
     };
