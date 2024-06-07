@@ -8,7 +8,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import CannonUtils from "./Utils/cannonUtils";
 import * as dat from "dat.gui";
 
-
 const SetUp = () => {
   const ref = useRef<HTMLDivElement>(null);
   const statsDiv = useRef<HTMLDivElement>(null);
@@ -17,20 +16,17 @@ const SetUp = () => {
   const [springParams, setSpringParams] = useState({
     stiffness: 100,
     damping: 0.5,
-    restLength: 1.5 / size / 3,
+    restLength: 1.5 / size / 3
   });
   const [showSprings, setShowSprings] = useState(false);
   const [showConstraints, setShowConstraints] = useState(false);
 
-
   useEffect(() => {
     if (typeof window === "undefined") return;
-
 
     const currentRef = ref.current;
     const currentStatsDiv = statsDiv.current;
     if (!currentRef) return;
-
 
     //setup
     const scene = new THREE.Scene();
@@ -43,11 +39,9 @@ const SetUp = () => {
     camera.position.set(5, 15, 5);
     camera.lookAt(0, 0, 0);
 
-
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     currentRef.appendChild(renderer.domElement);
-
 
     //light
     const light = new THREE.AmbientLight(0x404040);
@@ -56,19 +50,15 @@ const SetUp = () => {
     spotLight.castShadow = true;
     scene.add(spotLight);
 
-
     const lightHelper = new THREE.AmbientLight();
     scene.add(lightHelper);
-
 
     // grid helper
     const gridHelper = new THREE.GridHelper(50, 50);
     scene.add(gridHelper);
 
-
     //orbit control
     const orbit = new OrbitControls(camera, renderer.domElement);
-
 
     //stat
     const stats = new Stats();
@@ -79,7 +69,6 @@ const SetUp = () => {
     //Cannon.js
     const world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
-
 
     //ground mesh
     const massGround: number = 0;
@@ -93,7 +82,6 @@ const SetUp = () => {
     groundMesh.rotateX(-Math.PI / 2);
     scene.add(groundMesh);
 
-
     //ground body
     const groundBody = new CANNON.Body({
       shape: new CANNON.Plane(),
@@ -106,11 +94,9 @@ const SetUp = () => {
     );
     world.addBody(groundBody);
 
-
     //spider
     const catUrl = new URL("./assets/blackCat2.glb", import.meta.url);
     const assetLoader = new GLTFLoader();
-
 
     assetLoader.load(catUrl.href, function (gltf) {
       const model = gltf.scene;
@@ -119,9 +105,7 @@ const SetUp = () => {
       // model.position.set(0, 0, 0);
       model.rotation.set(0, 0, 0);
 
-
       scene.add(model);
-
 
       const meshes: any = [];
       model.traverse((child) => {
@@ -131,14 +115,12 @@ const SetUp = () => {
       });
       console.log("Meshes:", meshes);
 
-
       let normalMesh: THREE.Mesh | undefined;
       model.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           normalMesh = child as THREE.Mesh;
         }
       });
-
 
       if (normalMesh) {
         createConvexHull(meshes[0], normalMesh, world, scene);
@@ -147,12 +129,10 @@ const SetUp = () => {
       }
     });
 
-
     //cloth parameter
     const params = { size: size };
 
-
-    const clothSize = 1.5;
+    const clothSize = 2;
     let cols = params.size;
     let rows = params.size;
     let dist = clothSize / cols;
@@ -160,7 +140,6 @@ const SetUp = () => {
     const springs: CANNON.Spring[] = [];
     const springLines: THREE.Line[] = [];
     const constraintLines: THREE.Line[] = [];
-
 
     const createParticles = () => {
       const particleRadius = clothSize / cols;
@@ -182,7 +161,6 @@ const SetUp = () => {
       }
     };
 
-
     function connectGround(
       i1: number,
       j1: number,
@@ -196,22 +174,19 @@ const SetUp = () => {
       );
       world.addConstraint(distance);
 
-
       // Add line for visualizing the constraint
       const constraintMaterial = new THREE.LineBasicMaterial({
         color: 0xff0000,
       });
       const constraintPoints = [
-        new THREE.Vector3(
+        new THREE.Vector3(),
         //   particles[i1][j1].position.x,
         //   particles[i1][j1].position.y,
         //   particles[i1][j1].position.z
-        ),
-        new THREE.Vector3(
+        new THREE.Vector3(),
         //   particles[i2][j2].position.x,
         //   particles[i2][j2].position.y,
         //   particles[i2][j2].position.z
-        ),
       ];
       const constraintGeometry = new THREE.BufferGeometry().setFromPoints(
         constraintPoints
@@ -223,7 +198,6 @@ const SetUp = () => {
       scene.add(constraintLine);
       constraintLines.push(constraintLine);
 
-
       // Spring
       const spring = new CANNON.Spring(particles[i1][j1], particles[i2][j2], {
         restLength: dist,
@@ -232,20 +206,17 @@ const SetUp = () => {
       });
       springs.push(spring);
 
-
       // Add line for visualizing the spring
       const springMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
       const springPoints = [
-        new THREE.Vector3(
+        new THREE.Vector3(),
         //   particles[i1][j1].position.x,
         //   particles[i1][j1].position.y,
         //   particles[i1][j1].position.z
-        ),
-        new THREE.Vector3(
+        new THREE.Vector3(),
         //   particles[i2][j2].position.x,
         //   particles[i2][j2].position.y,
         //   particles[i2][j2].position.z
-        ),
       ];
       const springGeometry = new THREE.BufferGeometry().setFromPoints(
         springPoints
@@ -254,7 +225,6 @@ const SetUp = () => {
       scene.add(springLine);
       springLines.push(springLine);
     }
-
 
     const createCloth = () => {
       for (let i = 0; i < cols + 1; i++) {
@@ -266,7 +236,6 @@ const SetUp = () => {
         }
       }
     };
-
 
     const resetCloth = () => {
       particles.forEach((row) =>
@@ -282,13 +251,10 @@ const SetUp = () => {
       createCloth();
     };
 
-
     createParticles();
     createCloth();
 
-
     const gui = new dat.GUI();
-
 
     gui.add(springParams, "stiffness", 0, 150).onChange((value) => {
       setSpringParams((prev) => ({ ...prev, stiffness: value }));
@@ -297,7 +263,6 @@ const SetUp = () => {
       });
     });
 
-
     gui.add(springParams, "damping", 0, 1).onChange((value) => {
       setSpringParams((prev) => ({ ...prev, damping: value }));
       springs.forEach((spring) => {
@@ -305,14 +270,12 @@ const SetUp = () => {
       });
     });
 
-
     gui.add(springParams, "restLength", 0, 1).onChange((value) => {
       setSpringParams((prev) => ({ ...prev, restLength: value }));
       springs.forEach((spring) => {
         spring.restLength = value;
       });
     });
-
 
     gui.add(params, "size", 15, 45, 15).onChange((value) => {
       cols = value;
@@ -329,39 +292,32 @@ const SetUp = () => {
       setSize(value);
     });
 
-
     gui.add({ wireframe }, "wireframe").onChange((value) => {
       setWireframe(value);
     });
-
 
     gui.add({ showSprings }, "showSprings").onChange((value) => {
       setShowSprings(value);
     });
 
-
     gui.add({ showConstraints }, "showConstraints").onChange((value) => {
       setShowConstraints(value);
     });
 
-
     const textureLoader = new THREE.TextureLoader();
     const texture = textureLoader.load("Denim.jpg");
 
-
     const clothGeo = new THREE.PlaneGeometry(clothSize, clothSize, cols, rows);
     const clothMaterial = new THREE.MeshBasicMaterial({
-      color: "red",
+      color: "white",
       side: THREE.DoubleSide,
       wireframe: wireframe,
       map: texture,
     });
 
-
     const clothMesh = new THREE.Mesh(clothGeo, clothMaterial);
     clothMesh.position.set(0, 0, 0);
     scene.add(clothMesh);
-
 
     function updateParticules(): void {
       for (let i = 0; i < cols + 1; i++) {
@@ -375,10 +331,13 @@ const SetUp = () => {
       }
       //constraitn update
       constraintLines.forEach((line, index) => {
-        const constraint = world.constraints[index] as CANNON.DistanceConstraint;
+        const constraint = world.constraints[
+          index
+        ] as CANNON.DistanceConstraint;
         const bodyA = constraint.bodyA.position;
         const bodyB = constraint.bodyB.position;
-        const positions = line.geometry.attributes.position.array as Float32Array;
+        const positions = line.geometry.attributes.position
+          .array as Float32Array;
         positions[0] = bodyA.x;
         positions[1] = bodyA.y;
         positions[2] = bodyA.z;
@@ -388,7 +347,6 @@ const SetUp = () => {
         line.geometry.attributes.position.needsUpdate = true;
       });
     }
-
 
     function updateSprings(): void {
       for (const spring of springs) {
@@ -409,7 +367,6 @@ const SetUp = () => {
       });
     }
 
-
     //createConvexHull
     function createConvexHull(
       monkey: THREE.Object3D,
@@ -424,16 +381,13 @@ const SetUp = () => {
         flatShading: true,
       });
 
-
       const convexGeo = new THREE.Mesh(normalMesh.geometry, clothMaterial);
       convexGeo.userData.selectable = false;
       convexGeo.castShadow = true;
       convexGeo.receiveShadow = true;
       monkey.add(convexGeo);
 
-
       convertConvexHullToTrimesh();
-
 
       function convertConvexHullToTrimesh() {
         const shape = CannonUtils.CreateTrimesh(convexGeo.geometry);
@@ -441,16 +395,14 @@ const SetUp = () => {
         body.allowSleep = true;
         body.addShape(shape);
 
-
         body.position.x = monkey.position.x;
-        body.position.y = monkey.position.y - 0.245;
+        body.position.y = monkey.position.y - 0.24;
         body.position.z = monkey.position.z;
         body.quaternion.x = monkey.quaternion.x;
         body.quaternion.y = monkey.quaternion.y;
         body.quaternion.z = monkey.quaternion.z;
         body.quaternion.w = monkey.quaternion.w;
         world.addBody(body);
-
 
         // const redMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
         // const redMesh = new THREE.Mesh(convexGeo.geometry, redMaterial);
@@ -460,7 +412,6 @@ const SetUp = () => {
       }
     }
 
-
     //Resize
     const onWindowResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -469,34 +420,28 @@ const SetUp = () => {
     };
     window.addEventListener("resize", onWindowResize);
 
-
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      world.step(1 / 24);
+      world.step(1 / 60);
       updateParticules();
       updateSprings();
-
 
       constraintLines.forEach((line) => {
         line.visible = showConstraints;
       });
 
-
       springLines.forEach((line) => {
         line.visible = showSprings;
       });
 
-
       stats.begin();
       stats.end();
-
 
       // Render the scene
       renderer.render(scene, camera);
     };
     animate();
-
 
     return () => {
       window.removeEventListener("resize", onWindowResize);
@@ -515,8 +460,4 @@ const SetUp = () => {
   );
 };
 
-
 export default SetUp;
-
-
-
